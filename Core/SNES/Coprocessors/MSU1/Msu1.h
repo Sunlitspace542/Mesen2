@@ -22,8 +22,8 @@ private:
 	string _romFolder;
 	string _trackPath;
 
-	uint32_t _audioResumeTrack = 0;
-	uint32_t _audioResumeOffset = 0;
+	uint16_t _audioResumeTrack = 0;
+	uint32_t _audioResumeOffset = 8;
 
 	bool _repeat = false;
 	bool _paused = false;

@@ -66,7 +66,7 @@ void Msu1::Write(uint16_t addr, uint8_t value)
 			if(_trackSelect == _audioResumeTrack) {
 				LoadTrack(_audioResumeOffset);
 				_audioResumeTrack = 0;
-				_audioResumeOffset = 0;
+				_audioResumeOffset = 8;
 			} else {
 				LoadTrack();
 			}
