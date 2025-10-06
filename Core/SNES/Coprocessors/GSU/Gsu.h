@@ -31,6 +31,7 @@ private:
 	bool _waitForRamAccess = false;
 	bool _stopped = true;
 	bool _r15Changed = false;
+	bool _gsu3Present = false;
 	uint32_t _lastOpAddr = 0;
 
 	uint32_t _gsuRamSize = 0;
@@ -148,7 +149,7 @@ private:
 	void GETB();
 
 public:
-	Gsu(SnesConsole *console, uint32_t gsuRamSize);
+	Gsu(SnesConsole *console, uint32_t gsuRamSize, bool gsu3);
 	virtual ~Gsu();
 
 	void ProcessEndOfFrame() override;

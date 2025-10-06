@@ -15,14 +15,14 @@
 #include "Utilities/Serializer.h"
 #include "Shared/MemoryOperationType.h"
 
-Gsu::Gsu(SnesConsole *console, uint32_t gsuRamSize)
+Gsu::Gsu(SnesConsole *console, uint32_t gsuRamSize, bool gsu3)
 {
 	_emu = console->GetEmulator();
 	_console = console;
 	_memoryManager = console->GetMemoryManager();
 	_cpu = console->GetCpu();
 	_settings = _emu->GetSettings();
-
+	_gsu3Present = gsu3;
 	_clockMultiplier = std::max(1u, _settings->GetSnesConfig().GsuClockSpeed / 100);
 
 	_state = {};
@@ -39,7 +39,10 @@ Gsu::Gsu(SnesConsole *console, uint32_t gsuRamSize)
 		_gsuRamHandlers.push_back(unique_ptr<IMemoryHandler>(new RamHandler(_gsuRam, i * 0x1000, _gsuRamSize, MemoryType::GsuWorkRam)));
 		_gsuCpuRamHandlers.push_back(unique_ptr<IMemoryHandler>(new GsuRamHandler(_state, _gsuRamHandlers.back().get())));
 	}
-	
+
+	if (_gsu3Present == true) {
+	}
+
 	//CPU mappings
 	MemoryMappings *cpuMappings = _memoryManager->GetMemoryMappings();
 	vector<unique_ptr<IMemoryHandler>> &prgRomHandlers = _console->GetCartridge()->GetPrgRomHandlers();
@@ -61,15 +64,29 @@ Gsu::Gsu(SnesConsole *console, uint32_t gsuRamSize)
 	cpuMappings->RegisterHandler(0x00, 0x3F, 0x8000, 0xFFFF, _gsuCpuRomHandlers);
 	cpuMappings->RegisterHandler(0x80, 0xBF, 0x8000, 0xFFFF, _gsuCpuRomHandlers);
 
-	cpuMappings->RegisterHandler(0x40, 0x5F, 0x0000, 0xFFFF, _gsuCpuRomHandlers);
-	cpuMappings->RegisterHandler(0xC0, 0xDF, 0x0000, 0xFFFF, _gsuCpuRomHandlers);
+
+
+	if (_gsu3Present == true) {
+		cpuMappings->RegisterHandler(0x40, 0x6F, 0x0000, 0xFFFF, _gsuCpuRomHandlers);
+	} else {
+		cpuMappings->RegisterHandler(0x40, 0x5F, 0x0000, 0xFFFF, _gsuCpuRomHandlers);
+	}
+		cpuMappings->RegisterHandler(0xC0, 0xDF, 0x0000, 0xFFFF, _gsuCpuRomHandlers);
 
 	//GSU mappings
 	_mappings.RegisterHandler(0x00, 0x3F, 0x8000, 0xFFFF, prgRomHandlers);
 	_mappings.RegisterHandler(0x00, 0x3F, 0x0000, 0x7FFF, prgRomHandlers); //Mirror
 
-	_mappings.RegisterHandler(0x40, 0x5F, 0x0000, 0xFFFF, prgRomHandlers);
-	_mappings.RegisterHandler(0x70, 0x71, 0x0000, 0xFFFF, _gsuRamHandlers);
+	if (_gsu3Present == true) {
+		_mappings.RegisterHandler(0x40, 0x6F, 0x0000, 0xFFFF, prgRomHandlers);
+	} else {
+		_mappings.RegisterHandler(0x40, 0x5F, 0x0000, 0xFFFF, prgRomHandlers);
+	}
+	if (_gsu3Present == true) {
+		_mappings.RegisterHandler(0x70, 0x72, 0x0000, 0xFFFF, _gsuRamHandlers); //128k gsu3
+	} else {
+		_mappings.RegisterHandler(0x70, 0x71, 0x0000, 0xFFFF, _gsuRamHandlers); //64k mc1-gsu2
+	}
 }
 
 Gsu::~Gsu()
@@ -487,7 +504,7 @@ uint8_t Gsu::Read(uint32_t addr)
 
 		case 0x3034: return _state.ProgramBank;
 		case 0x3036: return _state.RomBank;
-		case 0x303B: return 0x04; //Version (can be 1 or 4?)
+		case 0x303B: if (_gsu3Present == true) {return 'R';} else {return 0x04;} //Version (can be 1 or 4?)
 		case 0x303C: return _state.RamBank;
 		case 0x303E: return (uint8_t)_state.CacheBase;
 		case 0x303F: return _state.CacheBase >> 8;

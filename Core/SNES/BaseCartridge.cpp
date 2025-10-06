@@ -246,8 +246,14 @@ void BaseCartridge::LoadRom()
 		}
 
 		if(_coprocessorType == CoprocessorType::GSU && _coprocessorRamSize == 0) {
+
+			if (_isGsu3 == true) {
+			//Use a min of 128k for GSU3 games
+			_coprocessorRamSize = 0x20000;
+			} else {
 			//Use a min of 64kb by default for GSU games
 			_coprocessorRamSize = 0x10000;
+			}
 		}
 
 		LoadEmbeddedFirmware();
@@ -266,6 +272,10 @@ void BaseCartridge::LoadRom()
 
 CoprocessorType BaseCartridge::GetCoprocessorType()
 {
+	if (_cartInfo.CartridgeType == 'R') {
+		_isGsu3 = true;
+	}
+
 	if((_cartInfo.RomType & 0x0F) >= 0x03) {
 		switch((_cartInfo.RomType & 0xF0) >> 4) {
 			case 0x00: return GetDspVersion();
@@ -281,7 +291,7 @@ CoprocessorType BaseCartridge::GetCoprocessorType()
 					default: return CoprocessorType::None;
 				}
 				break;
-
+				
 			case 0x0F:
 				switch(_cartInfo.CartridgeType) {
 					case 0x00: 
@@ -532,7 +542,7 @@ void BaseCartridge::InitCoprocessor()
 		_sa1 = dynamic_cast<Sa1*>(_coprocessor.get());
 		_needCoprocSync = true;
 	} else if(_coprocessorType == CoprocessorType::GSU) {
-		_coprocessor.reset(new Gsu(_console, _coprocessorRamSize));
+		_coprocessor.reset(new Gsu(_console, _coprocessorRamSize, _isGsu3));
 		_gsu = dynamic_cast<Gsu*>(_coprocessor.get());
 		_needCoprocSync = true;
 	} else if(_coprocessorType == CoprocessorType::SDD1) {
@@ -821,7 +831,7 @@ void BaseCartridge::DisplayCartInfo(bool showCorruptedHeaderWarning)
 			case CoprocessorType::DSP2: coProcMessage += "DSP2"; break;
 			case CoprocessorType::DSP3: coProcMessage += "DSP3"; break;
 			case CoprocessorType::DSP4: coProcMessage += "DSP4"; break;
-			case CoprocessorType::GSU: coProcMessage += "Super FX (GSU1/2)"; break;
+			case CoprocessorType::GSU: coProcMessage += "Super FX (GSU1/2/3)"; break;
 			case CoprocessorType::OBC1: coProcMessage += "OBC1"; break;
 			case CoprocessorType::RTC: coProcMessage += "RTC"; break;
 			case CoprocessorType::SA1: coProcMessage += "SA1"; break;

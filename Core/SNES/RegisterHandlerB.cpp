@@ -75,6 +75,12 @@ void RegisterHandlerB::Write(uint32_t addr, uint8_t value)
 			case 0x2182: _wramPosition = (_wramPosition & 0x100FF) | (value << 8); break;
 			case 0x2183: _wramPosition = (_wramPosition & 0xFFFF) | ((value & 0x01) << 16); break;
 		}
+	} else if (addr >= 0x21FC && addr <= 0x21FD) {
+		switch(addr & 0xFFFF) {
+			// Nocash Debug Extension Input Ports
+			case 0x21FC: putchar(value); break; // char_out
+			case 0x21FD: break; // No function (allows to write 21FCh even in 16bit mode)
+		}
 	} else if(addr >= 0x2200 && addr <= 0x22FF && _console->GetCartridge()->GetSa1()) {
 		_console->GetCartridge()->GetSa1()->CpuRegisterWrite(addr, value);
 	} else if(_msu1 && addr <= 0x2007) {

@@ -56,6 +56,8 @@ private:
 	bool _hasRtc = false;
 	string _romPath;
 
+	bool _isGsu3 = false;
+
 	uint8_t* _prgRom = nullptr;
 	uint8_t* _saveRam = nullptr;
 	

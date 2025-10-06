@@ -6,6 +6,8 @@
 
 MESENFLAGS=
 
+USE_AOT=true
+
 ifeq ($(USE_GCC),true)
 	CXX := g++
 	CC := gcc
